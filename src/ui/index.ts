@@ -1,0 +1,8 @@
+export { Preview } from './Preview';
+export { Controls } from './Controls';
+export { MediaPanel } from './MediaPanel';
+export { EffectsPanel } from './EffectsPanel';
+export { PropertiesPanel } from './PropertiesPanel';
+export { RecordPanel } from './RecordPanel';
+export { ShapesPanel } from './ShapesPanel';
+export { ShapeOverlay } from './ShapeOverlay';
