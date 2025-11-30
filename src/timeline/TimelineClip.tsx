@@ -2,6 +2,7 @@ import React, { useRef, useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Clip, VideoClip, AudioClip, TextClip, ShapeClip, Keyframe } from '@/core/types';
 import { useSirenStore } from '@/core/store';
+import LinkIcon from '@mui/icons-material/Link';
 
 interface TimelineClipProps {
   clip: Clip;
@@ -287,8 +288,8 @@ export const TimelineClip: React.FC<TimelineClipProps> = ({
 
       {/* Link indicator */}
       {isLinked && (
-        <div className="absolute top-0.5 left-3 text-[9px] text-cyan-400 font-medium" title="Linked - moves with other linked clips">
-          🔗
+        <div className="absolute top-0.5 left-3 text-cyan-400" title="Linked - moves with other linked clips">
+          <LinkIcon sx={{ fontSize: 12 }} />
         </div>
       )}
     </motion.div>

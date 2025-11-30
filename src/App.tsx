@@ -6,6 +6,15 @@ import { useSirenStore } from './core/store';
 import { videoEngine } from './core/engine';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { getShortcutsByCategory, formatShortcut } from './core/shortcuts';
+import MovieIcon from '@mui/icons-material/Movie';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import SaveIcon from '@mui/icons-material/Save';
+import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
+import VideoLibraryIcon from '@mui/icons-material/VideoLibrary';
+import CategoryIcon from '@mui/icons-material/Category';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import MicIcon from '@mui/icons-material/Mic';
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
 type LeftPanelTab = 'media' | 'effects' | 'record' | 'shapes' | 'captions';
 
@@ -14,15 +23,44 @@ const MAX_TIMELINE_HEIGHT = 600;
 const DEFAULT_TIMELINE_HEIGHT = 256;
 
 export const App: React.FC = () => {
-  const { project } = useSirenStore();
+  const { project, saveProject, loadProject } = useSirenStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [leftPanelTab, setLeftPanelTab] = useState<LeftPanelTab>('media');
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [showShortcuts, setShowShortcuts] = useState(false);
   const [timelineHeight, setTimelineHeight] = useState(DEFAULT_TIMELINE_HEIGHT);
   const [isResizing, setIsResizing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const resizeStartY = useRef(0);
   const resizeStartHeight = useRef(0);
+
+  // Handle save project
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await saveProject();
+    } catch (error) {
+      console.error('Failed to save:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Handle load project
+  const handleLoad = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      await loadProject(file);
+    } catch (error) {
+      alert('Failed to load project. Make sure it\'s a valid .siren file.');
+    }
+
+    // Reset input so same file can be loaded again
+    e.target.value = '';
+  };
 
   // Handle timeline resize
   const handleResizeStart = useCallback((e: React.MouseEvent) => {
@@ -89,7 +127,7 @@ export const App: React.FC = () => {
     return (
       <div className="h-screen bg-siren-bg flex items-center justify-center">
         <div className="text-center">
-          <div className="text-4xl mb-4 animate-pulse">🎬</div>
+          <div className="text-4xl mb-4 animate-pulse"><MovieIcon sx={{ fontSize: 48 }} /></div>
           <h1 className="text-xl font-bold text-siren-text mb-2">Siren</h1>
           <p className="text-sm text-siren-text-muted">Loading video engine...</p>
         </div>
@@ -102,11 +140,20 @@ export const App: React.FC = () => {
       {/* Top Bar */}
       <header className="flex items-center justify-between px-4 py-2 bg-siren-surface border-b border-siren-border">
         <div className="flex items-center gap-3">
-          <h1 className="text-lg font-bold text-siren-accent">🎬 Siren</h1>
+          <h1 className="text-lg font-bold text-siren-accent flex items-center gap-1"><MovieIcon sx={{ fontSize: 20 }} /> Siren</h1>
           <span className="text-xs text-siren-text-muted">Video Editor</span>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Hidden file input for loading */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".siren,.json"
+            onChange={handleLoad}
+            className="hidden"
+          />
+
           <input
             type="text"
             className="px-3 py-1.5 bg-siren-bg border border-siren-border rounded text-sm text-siren-text w-48"
@@ -116,6 +163,29 @@ export const App: React.FC = () => {
             }}
             placeholder="Project name"
           />
+
+          {/* Load button */}
+          <button
+            className="px-3 py-1.5 bg-siren-bg border border-siren-border text-siren-text rounded text-sm font-medium hover:bg-siren-border transition-colors flex items-center gap-1.5"
+            onClick={() => fileInputRef.current?.click()}
+            title="Open project"
+          >
+            <FolderOpenIcon sx={{ fontSize: 16 }} />
+            <span className="hidden sm:inline">Open</span>
+          </button>
+
+          {/* Save button */}
+          <button
+            className="px-3 py-1.5 bg-siren-bg border border-siren-border text-siren-text rounded text-sm font-medium hover:bg-siren-border transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            onClick={handleSave}
+            disabled={isSaving}
+            title="Save project"
+          >
+            {isSaving ? <HourglassEmptyIcon sx={{ fontSize: 16 }} /> : <SaveIcon sx={{ fontSize: 16 }} />}
+            <span className="hidden sm:inline">{isSaving ? 'Saving...' : 'Save'}</span>
+          </button>
+
+          {/* Export button */}
           <button
             className="px-4 py-1.5 bg-siren-accent text-white rounded text-sm font-medium hover:bg-siren-accent-hover transition-colors"
             onClick={() => setIsExportModalOpen(true)}
@@ -132,12 +202,12 @@ export const App: React.FC = () => {
           {/* Tabs */}
           <div className="flex border-b border-siren-border">
             {([
-              { id: 'media', icon: '📁', label: 'Media' },
-              { id: 'shapes', icon: '⬡', label: 'Shapes' },
-              { id: 'effects', icon: '✨', label: 'FX' },
-              { id: 'captions', icon: '🎤', label: 'Captions' },
-              { id: 'record', icon: '⏺', label: 'Record' },
-            ] as { id: LeftPanelTab; icon: string; label: string }[]).map((tab) => (
+              { id: 'media', icon: <VideoLibraryIcon sx={{ fontSize: 18 }} />, label: 'Media' },
+              { id: 'shapes', icon: <CategoryIcon sx={{ fontSize: 18 }} />, label: 'Shapes' },
+              { id: 'effects', icon: <AutoAwesomeIcon sx={{ fontSize: 18 }} />, label: 'FX' },
+              { id: 'captions', icon: <MicIcon sx={{ fontSize: 18 }} />, label: 'Captions' },
+              { id: 'record', icon: <FiberManualRecordIcon sx={{ fontSize: 18 }} />, label: 'Record' },
+            ] as { id: LeftPanelTab; icon: React.ReactNode; label: string }[]).map((tab) => (
               <button
                 key={tab.id}
                 className={`flex-1 py-2 text-[10px] font-medium transition-colors flex flex-col items-center gap-0.5 ${
@@ -148,7 +218,7 @@ export const App: React.FC = () => {
                 onClick={() => setLeftPanelTab(tab.id)}
                 title={tab.label}
               >
-                <span className="text-sm">{tab.icon}</span>
+                {tab.icon}
                 <span>{tab.label}</span>
               </button>
             ))}

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSirenStore } from '@/core/store';
-import { Clip, VideoClip, AudioClip, TextClip, AnimatableProperty, Transform } from '@/core/types';
+import { Clip, VideoClip, AudioClip, TextClip, ShapeClip, ImageClip, AnimatableProperty, Transform } from '@/core/types';
 import { TextEditor } from '@/text';
 import { getAnimatedValue } from '@/core/keyframes';
 
@@ -45,6 +45,10 @@ export const PropertiesPanel: React.FC = () => {
         <VideoClipProperties clip={clip as VideoClip} />
       ) : clip.type === 'audio' ? (
         <AudioClipProperties clip={clip as AudioClip} />
+      ) : clip.type === 'shape' ? (
+        <ShapeClipProperties clip={clip as ShapeClip} />
+      ) : clip.type === 'image' ? (
+        <ImageClipProperties clip={clip as ImageClip} />
       ) : (
         <GeneralClipProperties clip={clip} />
       )}
@@ -474,6 +478,549 @@ const TransformProperties: React.FC<{ clip: Clip }> = ({ clip }) => {
         </div>
       </div>
 
+    </div>
+  );
+};
+
+const ShapeClipProperties: React.FC<{ clip: ShapeClip }> = ({ clip }) => {
+  const { updateClip } = useSirenStore();
+  const [showGradient, setShowGradient] = useState(!!clip.style.gradient);
+  const [showShadow, setShowShadow] = useState(!!clip.style.shadow);
+  const [showGlow, setShowGlow] = useState(!!clip.style.glow);
+  const [showText, setShowText] = useState(!!clip.style.text);
+
+  const updateStyle = (updates: Partial<ShapeClip['style']>) => {
+    updateClip(clip.id, {
+      style: { ...clip.style, ...updates },
+    });
+  };
+
+  const shapeNames: Record<string, string> = {
+    rectangle: 'Rectangle',
+    circle: 'Circle/Ellipse',
+    triangle: 'Triangle',
+    star: 'Star',
+    heart: 'Heart',
+    arrow: 'Arrow',
+    line: 'Line',
+    checkmark: 'Checkmark',
+    cross: 'Cross',
+    lightning: 'Lightning',
+    'speech-bubble': 'Speech Bubble',
+  };
+
+  return (
+    <div className="p-4 space-y-4">
+      <h3 className="text-sm font-semibold text-siren-text">
+        {shapeNames[clip.shapeType] || 'Shape'} Properties
+      </h3>
+
+      {/* Size */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-siren-text-muted">Size</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] text-siren-text-muted">Width</label>
+            <input
+              type="number"
+              className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+              value={Math.round(clip.size.width)}
+              onChange={(e) => updateClip(clip.id, { size: { ...clip.size, width: parseInt(e.target.value) || 50 } })}
+              min={10}
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-siren-text-muted">Height</label>
+            <input
+              type="number"
+              className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+              value={Math.round(clip.size.height)}
+              onChange={(e) => updateClip(clip.id, { size: { ...clip.size, height: parseInt(e.target.value) || 50 } })}
+              min={10}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Fill Color */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-siren-text-muted">Fill</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={clip.style.fill}
+            onChange={(e) => updateStyle({ fill: e.target.value })}
+            className="w-10 h-8 rounded border border-siren-border cursor-pointer"
+          />
+          <input
+            type="text"
+            value={clip.style.fill}
+            onChange={(e) => updateStyle({ fill: e.target.value })}
+            className="flex-1 px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <label className="text-[10px] text-siren-text-muted">Opacity</label>
+          <input
+            type="range"
+            value={clip.style.fillOpacity * 100}
+            onChange={(e) => updateStyle({ fillOpacity: parseInt(e.target.value) / 100 })}
+            min={0}
+            max={100}
+            className="flex-1"
+          />
+          <span className="text-xs text-siren-text w-10 text-right">{Math.round(clip.style.fillOpacity * 100)}%</span>
+        </div>
+      </div>
+
+      {/* Stroke */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-siren-text-muted">Stroke</label>
+        <div className="flex items-center gap-2">
+          <input
+            type="color"
+            value={clip.style.stroke}
+            onChange={(e) => updateStyle({ stroke: e.target.value })}
+            className="w-10 h-8 rounded border border-siren-border cursor-pointer"
+          />
+          <input
+            type="number"
+            value={clip.style.strokeWidth}
+            onChange={(e) => updateStyle({ strokeWidth: parseInt(e.target.value) || 0 })}
+            className="w-16 px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+            min={0}
+            max={20}
+          />
+          <select
+            value={clip.style.strokeStyle}
+            onChange={(e) => updateStyle({ strokeStyle: e.target.value as 'solid' | 'dashed' | 'dotted' })}
+            className="flex-1 px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+          >
+            <option value="solid">Solid</option>
+            <option value="dashed">Dashed</option>
+            <option value="dotted">Dotted</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Corner Radius (for rectangles) */}
+      {clip.shapeType === 'rectangle' && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-siren-text-muted">Corner Radius</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              value={clip.style.cornerRadius}
+              onChange={(e) => updateStyle({ cornerRadius: parseInt(e.target.value) })}
+              min={0}
+              max={50}
+              className="flex-1"
+            />
+            <span className="text-xs text-siren-text w-10 text-right">{clip.style.cornerRadius}px</span>
+          </div>
+        </div>
+      )}
+
+      {/* Star/Polygon points */}
+      {clip.shapeType === 'star' && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-siren-text-muted">Star Points</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              value={clip.style.points || 5}
+              onChange={(e) => updateStyle({ points: parseInt(e.target.value) })}
+              min={3}
+              max={12}
+              className="flex-1"
+            />
+            <span className="text-xs text-siren-text w-10 text-right">{clip.style.points || 5}</span>
+          </div>
+          <label className="text-xs font-medium text-siren-text-muted">Inner Radius</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              value={(clip.style.innerRadius || 0.4) * 100}
+              onChange={(e) => updateStyle({ innerRadius: parseInt(e.target.value) / 100 })}
+              min={10}
+              max={90}
+              className="flex-1"
+            />
+            <span className="text-xs text-siren-text w-10 text-right">{Math.round((clip.style.innerRadius || 0.4) * 100)}%</span>
+          </div>
+        </div>
+      )}
+
+      {/* Arrow head size */}
+      {clip.shapeType === 'arrow' && (
+        <div className="space-y-2">
+          <label className="text-xs font-medium text-siren-text-muted">Arrow Head Size</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              value={clip.style.arrowHeadSize || 20}
+              onChange={(e) => updateStyle({ arrowHeadSize: parseInt(e.target.value) })}
+              min={10}
+              max={50}
+              className="flex-1"
+            />
+            <span className="text-xs text-siren-text w-10 text-right">{clip.style.arrowHeadSize || 20}px</span>
+          </div>
+        </div>
+      )}
+
+      {/* Gradient */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-siren-text-muted">Gradient Fill</label>
+          <button
+            onClick={() => {
+              if (showGradient) {
+                updateStyle({ gradient: undefined });
+              } else {
+                updateStyle({
+                  gradient: { type: 'linear', colors: [clip.style.fill, '#ffffff'], angle: 0 }
+                });
+              }
+              setShowGradient(!showGradient);
+            }}
+            className={`px-2 py-0.5 rounded text-xs ${showGradient ? 'bg-siren-accent text-white' : 'bg-siren-bg text-siren-text-muted'}`}
+          >
+            {showGradient ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        {showGradient && clip.style.gradient && (
+          <div className="space-y-2 pl-2 border-l-2 border-siren-accent/30">
+            <select
+              value={clip.style.gradient.type}
+              onChange={(e) => updateStyle({ gradient: { ...clip.style.gradient!, type: e.target.value as 'linear' | 'radial' } })}
+              className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+            >
+              <option value="linear">Linear</option>
+              <option value="radial">Radial</option>
+            </select>
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] text-siren-text-muted">Start</label>
+                <input
+                  type="color"
+                  value={clip.style.gradient.colors[0]}
+                  onChange={(e) => updateStyle({ gradient: { ...clip.style.gradient!, colors: [e.target.value, clip.style.gradient!.colors[1]] } })}
+                  className="w-full h-8 rounded border border-siren-border cursor-pointer"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-[10px] text-siren-text-muted">End</label>
+                <input
+                  type="color"
+                  value={clip.style.gradient.colors[1]}
+                  onChange={(e) => updateStyle({ gradient: { ...clip.style.gradient!, colors: [clip.style.gradient!.colors[0], e.target.value] } })}
+                  className="w-full h-8 rounded border border-siren-border cursor-pointer"
+                />
+              </div>
+            </div>
+            {clip.style.gradient.type === 'linear' && (
+              <div className="flex items-center gap-2">
+                <label className="text-[10px] text-siren-text-muted">Angle</label>
+                <input
+                  type="range"
+                  value={clip.style.gradient.angle}
+                  onChange={(e) => updateStyle({ gradient: { ...clip.style.gradient!, angle: parseInt(e.target.value) } })}
+                  min={0}
+                  max={360}
+                  className="flex-1"
+                />
+                <span className="text-xs text-siren-text w-10 text-right">{clip.style.gradient.angle}°</span>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Shadow */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-siren-text-muted">Shadow</label>
+          <button
+            onClick={() => {
+              if (showShadow) {
+                updateStyle({ shadow: undefined });
+              } else {
+                updateStyle({ shadow: { offsetX: 4, offsetY: 4, blur: 8, color: '#00000080' } });
+              }
+              setShowShadow(!showShadow);
+            }}
+            className={`px-2 py-0.5 rounded text-xs ${showShadow ? 'bg-siren-accent text-white' : 'bg-siren-bg text-siren-text-muted'}`}
+          >
+            {showShadow ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        {showShadow && clip.style.shadow && (
+          <div className="space-y-2 pl-2 border-l-2 border-siren-accent/30">
+            <div className="flex items-center gap-2">
+              <input
+                type="color"
+                value={clip.style.shadow.color.slice(0, 7)}
+                onChange={(e) => updateStyle({ shadow: { ...clip.style.shadow!, color: e.target.value + '80' } })}
+                className="w-10 h-8 rounded border border-siren-border cursor-pointer"
+              />
+              <div className="flex-1 grid grid-cols-3 gap-1">
+                <div>
+                  <label className="text-[10px] text-siren-text-muted">X</label>
+                  <input
+                    type="number"
+                    value={clip.style.shadow.offsetX}
+                    onChange={(e) => updateStyle({ shadow: { ...clip.style.shadow!, offsetX: parseInt(e.target.value) || 0 } })}
+                    className="w-full px-1 py-0.5 bg-siren-bg border border-siren-border rounded text-xs text-siren-text"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-siren-text-muted">Y</label>
+                  <input
+                    type="number"
+                    value={clip.style.shadow.offsetY}
+                    onChange={(e) => updateStyle({ shadow: { ...clip.style.shadow!, offsetY: parseInt(e.target.value) || 0 } })}
+                    className="w-full px-1 py-0.5 bg-siren-bg border border-siren-border rounded text-xs text-siren-text"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] text-siren-text-muted">Blur</label>
+                  <input
+                    type="number"
+                    value={clip.style.shadow.blur}
+                    onChange={(e) => updateStyle({ shadow: { ...clip.style.shadow!, blur: parseInt(e.target.value) || 0 } })}
+                    className="w-full px-1 py-0.5 bg-siren-bg border border-siren-border rounded text-xs text-siren-text"
+                    min={0}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Glow */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-siren-text-muted">Glow</label>
+          <button
+            onClick={() => {
+              if (showGlow) {
+                updateStyle({ glow: undefined });
+              } else {
+                updateStyle({ glow: { color: clip.style.fill, blur: 10 } });
+              }
+              setShowGlow(!showGlow);
+            }}
+            className={`px-2 py-0.5 rounded text-xs ${showGlow ? 'bg-siren-accent text-white' : 'bg-siren-bg text-siren-text-muted'}`}
+          >
+            {showGlow ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        {showGlow && clip.style.glow && (
+          <div className="flex items-center gap-2 pl-2 border-l-2 border-siren-accent/30">
+            <input
+              type="color"
+              value={clip.style.glow.color}
+              onChange={(e) => updateStyle({ glow: { ...clip.style.glow!, color: e.target.value } })}
+              className="w-10 h-8 rounded border border-siren-border cursor-pointer"
+            />
+            <div className="flex-1">
+              <label className="text-[10px] text-siren-text-muted">Blur</label>
+              <input
+                type="range"
+                value={clip.style.glow.blur}
+                onChange={(e) => updateStyle({ glow: { ...clip.style.glow!, blur: parseInt(e.target.value) } })}
+                min={0}
+                max={50}
+                className="w-full"
+              />
+            </div>
+            <span className="text-xs text-siren-text w-10 text-right">{clip.style.glow.blur}px</span>
+          </div>
+        )}
+      </div>
+
+      {/* Text Inside Shape */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <label className="text-xs font-medium text-siren-text-muted">Text Label</label>
+          <button
+            onClick={() => {
+              if (showText) {
+                updateStyle({ text: undefined });
+              } else {
+                updateStyle({
+                  text: {
+                    content: 'Text',
+                    fontFamily: 'Arial',
+                    fontSize: 24,
+                    fontWeight: 700,
+                    color: '#ffffff',
+                    align: 'center',
+                  }
+                });
+              }
+              setShowText(!showText);
+            }}
+            className={`px-2 py-0.5 rounded text-xs ${showText ? 'bg-siren-accent text-white' : 'bg-siren-bg text-siren-text-muted'}`}
+          >
+            {showText ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        {showText && clip.style.text && (
+          <div className="space-y-2 pl-2 border-l-2 border-siren-accent/30">
+            {/* Text Content */}
+            <div>
+              <label className="text-[10px] text-siren-text-muted">Content</label>
+              <input
+                type="text"
+                value={clip.style.text.content}
+                onChange={(e) => updateStyle({ text: { ...clip.style.text!, content: e.target.value } })}
+                className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+                placeholder="Enter text..."
+              />
+            </div>
+
+            {/* Font Family */}
+            <div>
+              <label className="text-[10px] text-siren-text-muted">Font</label>
+              <select
+                value={clip.style.text.fontFamily}
+                onChange={(e) => updateStyle({ text: { ...clip.style.text!, fontFamily: e.target.value } })}
+                className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+              >
+                <option value="Arial">Arial</option>
+                <option value="Helvetica">Helvetica</option>
+                <option value="Georgia">Georgia</option>
+                <option value="Times New Roman">Times New Roman</option>
+                <option value="Verdana">Verdana</option>
+                <option value="Impact">Impact</option>
+                <option value="Comic Sans MS">Comic Sans MS</option>
+                <option value="Courier New">Courier New</option>
+              </select>
+            </div>
+
+            {/* Font Size & Weight */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] text-siren-text-muted">Size</label>
+                <input
+                  type="number"
+                  value={clip.style.text.fontSize}
+                  onChange={(e) => updateStyle({ text: { ...clip.style.text!, fontSize: parseInt(e.target.value) || 16 } })}
+                  className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+                  min={8}
+                  max={200}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-siren-text-muted">Weight</label>
+                <select
+                  value={clip.style.text.fontWeight}
+                  onChange={(e) => updateStyle({ text: { ...clip.style.text!, fontWeight: parseInt(e.target.value) } })}
+                  className="w-full px-2 py-1 bg-siren-bg border border-siren-border rounded text-sm text-siren-text"
+                >
+                  <option value="400">Normal</option>
+                  <option value="500">Medium</option>
+                  <option value="600">Semi-Bold</option>
+                  <option value="700">Bold</option>
+                  <option value="800">Extra Bold</option>
+                  <option value="900">Black</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Text Color & Align */}
+            <div className="flex items-center gap-2">
+              <div className="flex-1">
+                <label className="text-[10px] text-siren-text-muted">Color</label>
+                <div className="flex gap-1">
+                  <input
+                    type="color"
+                    value={clip.style.text.color}
+                    onChange={(e) => updateStyle({ text: { ...clip.style.text!, color: e.target.value } })}
+                    className="w-10 h-8 rounded border border-siren-border cursor-pointer"
+                  />
+                  <input
+                    type="text"
+                    value={clip.style.text.color}
+                    onChange={(e) => updateStyle({ text: { ...clip.style.text!, color: e.target.value } })}
+                    className="flex-1 px-2 py-1 bg-siren-bg border border-siren-border rounded text-xs text-siren-text"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Text Alignment */}
+            <div>
+              <label className="text-[10px] text-siren-text-muted">Align</label>
+              <div className="flex gap-1">
+                {(['left', 'center', 'right'] as const).map((align) => (
+                  <button
+                    key={align}
+                    onClick={() => updateStyle({ text: { ...clip.style.text!, align } })}
+                    className={`flex-1 py-1 rounded text-xs ${
+                      clip.style.text!.align === align
+                        ? 'bg-siren-accent text-white'
+                        : 'bg-siren-bg text-siren-text-muted hover:bg-siren-border'
+                    }`}
+                  >
+                    {align === 'left' ? '◀' : align === 'center' ? '●' : '▶'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Quick color presets */}
+      <div className="space-y-2">
+        <label className="text-xs font-medium text-siren-text-muted">Quick Colors</label>
+        <div className="flex flex-wrap gap-1">
+          {['#ff0000', '#ff6600', '#ffcc00', '#00ff00', '#00ccff', '#0066ff', '#9900ff', '#ff00ff', '#ffffff', '#000000'].map(color => (
+            <button
+              key={color}
+              onClick={() => updateStyle({ fill: color })}
+              className="w-6 h-6 rounded border border-siren-border hover:scale-110 transition-transform"
+              style={{ backgroundColor: color }}
+              title={color}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Transform */}
+      <TransformProperties clip={clip} />
+    </div>
+  );
+};
+
+const ImageClipProperties: React.FC<{ clip: ImageClip }> = ({ clip }) => {
+  const { project } = useSirenStore();
+  const asset = project.assets.find((a) => a.id === clip.assetId);
+
+  return (
+    <div className="p-4 space-y-4">
+      <h3 className="text-sm font-semibold text-siren-text">Image Properties</h3>
+
+      {asset && (
+        <div className="space-y-2">
+          <div className="text-xs text-siren-text-muted">
+            <p>Source: {asset.name}</p>
+            {asset.dimensions && (
+              <p>Size: {asset.dimensions.width} × {asset.dimensions.height}</p>
+            )}
+          </div>
+          {asset.thumbnail && (
+            <img src={asset.thumbnail || asset.src} alt="" className="w-full rounded border border-siren-border" />
+          )}
+        </div>
+      )}
+
+      {/* Transform */}
+      <TransformProperties clip={clip} />
     </div>
   );
 };

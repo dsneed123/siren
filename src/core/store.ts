@@ -28,6 +28,12 @@ interface SirenStore {
   createProject: (name: string) => void;
   updateProject: (updates: Partial<Project>) => void;
 
+  // Save/Load actions
+  saveProject: () => Promise<void>;
+  loadProject: (file: File) => Promise<void>;
+  autoSave: () => void;
+  loadAutoSave: () => boolean;
+
   // Asset actions
   addAsset: (asset: Omit<MediaAsset, 'id'>) => string;
   removeAsset: (id: string) => void;
@@ -130,6 +136,142 @@ export const useSirenStore = create<SirenStore>((set, get) => ({
     set((state) => ({
       project: { ...state.project, ...updates, updatedAt: Date.now() },
     }));
+  },
+
+  // Save project to file with embedded media
+  saveProject: async () => {
+    const state = get();
+    const project = state.project;
+
+    // Convert blob URLs to base64 for persistence
+    const assetsWithData = await Promise.all(
+      project.assets.map(async (asset) => {
+        try {
+          const response = await fetch(asset.src);
+          const blob = await response.blob();
+          const base64 = await new Promise<string>((resolve) => {
+            const reader = new FileReader();
+            reader.onloadend = () => resolve(reader.result as string);
+            reader.readAsDataURL(blob);
+          });
+          return { ...asset, src: base64 };
+        } catch (e) {
+          console.warn('Failed to serialize asset:', asset.name, e);
+          return asset;
+        }
+      })
+    );
+
+    const projectData = {
+      ...project,
+      assets: assetsWithData,
+      savedAt: Date.now(),
+      version: '1.0',
+    };
+
+    const blob = new Blob([JSON.stringify(projectData, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${project.name || 'project'}.siren`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  },
+
+  // Load project from file
+  loadProject: async (file: File) => {
+    try {
+      const text = await file.text();
+      const projectData = JSON.parse(text);
+
+      // Convert base64 back to blob URLs
+      const assetsWithUrls = await Promise.all(
+        projectData.assets.map(async (asset: MediaAsset) => {
+          if (asset.src.startsWith('data:')) {
+            try {
+              const response = await fetch(asset.src);
+              const blob = await response.blob();
+              const url = URL.createObjectURL(blob);
+              return { ...asset, src: url };
+            } catch (e) {
+              console.warn('Failed to restore asset:', asset.name, e);
+              return asset;
+            }
+          }
+          return asset;
+        })
+      );
+
+      const restoredProject: Project = {
+        ...projectData,
+        assets: assetsWithUrls,
+        updatedAt: Date.now(),
+      };
+
+      set({
+        project: restoredProject,
+        history: [],
+        historyIndex: -1,
+        editor: {
+          currentTime: 0,
+          isPlaying: false,
+          zoom: 1,
+          selectedClipIds: [],
+          selectedTrackId: null,
+          snapToGrid: true,
+          showWaveforms: true,
+        },
+      });
+    } catch (e) {
+      console.error('Failed to load project:', e);
+      throw new Error('Invalid project file');
+    }
+  },
+
+  // Auto-save to localStorage (saves project metadata, not media)
+  autoSave: () => {
+    const state = get();
+    const projectMeta = {
+      ...state.project,
+      // Don't save blob URLs in localStorage - they won't persist
+      assets: state.project.assets.map((a) => ({
+        ...a,
+        src: '', // Clear src, will need to re-import media
+        thumbnail: '',
+      })),
+    };
+    try {
+      localStorage.setItem('siren_autosave', JSON.stringify(projectMeta));
+      localStorage.setItem('siren_autosave_time', Date.now().toString());
+    } catch (e) {
+      console.warn('Auto-save failed:', e);
+    }
+  },
+
+  // Load from auto-save (returns true if found)
+  loadAutoSave: () => {
+    try {
+      const saved = localStorage.getItem('siren_autosave');
+      if (!saved) return false;
+
+      const projectMeta = JSON.parse(saved);
+      set({
+        project: {
+          ...projectMeta,
+          updatedAt: Date.now(),
+        },
+        history: [],
+        historyIndex: -1,
+      });
+      return true;
+    } catch (e) {
+      console.warn('Failed to load auto-save:', e);
+      return false;
+    }
   },
 
   addAsset: (asset) => {
@@ -312,6 +454,9 @@ export const useSirenStore = create<SirenStore>((set, get) => ({
         return state;
       }
 
+      // Calculate the split point relative to clip start
+      const splitPointInClip = time - clip.timeRange.start;
+
       const firstClip = {
         ...clip,
         timeRange: { start: clip.timeRange.start, end: time },
@@ -322,6 +467,27 @@ export const useSirenStore = create<SirenStore>((set, get) => ({
         id: uuid(),
         timeRange: { start: time, end: clip.timeRange.end },
       };
+
+      // For video clips, update the sourceTimeRange so the second clip
+      // starts at the correct position in the source video
+      if (clip.type === 'video') {
+        const videoClip = clip as any;
+        const sourceStart = videoClip.sourceTimeRange?.start || 0;
+        const speed = videoClip.speed || 1;
+
+        // Calculate how far into the source video we are at the split point
+        const sourceOffset = splitPointInClip * speed;
+
+        (firstClip as any).sourceTimeRange = {
+          start: sourceStart,
+          end: sourceStart + sourceOffset,
+        };
+
+        (secondClip as any).sourceTimeRange = {
+          start: sourceStart + sourceOffset,
+          end: videoClip.sourceTimeRange?.end || (sourceStart + sourceOffset + (clip.timeRange.end - time) * speed),
+        };
+      }
 
       return {
         project: {

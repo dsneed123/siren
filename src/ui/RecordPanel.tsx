@@ -1,5 +1,9 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useSirenStore } from '@/core/store';
+import VideocamIcon from '@mui/icons-material/Videocam';
+import ScreenShareIcon from '@mui/icons-material/ScreenShare';
+import PictureInPictureAltIcon from '@mui/icons-material/PictureInPictureAlt';
+import MicIcon from '@mui/icons-material/Mic';
 
 type RecordMode = 'webcam' | 'screen' | 'both' | 'audio';
 
@@ -308,13 +312,16 @@ export const RecordPanel: React.FC = () => {
                 if (isPreviewing) stopPreview();
               }
             }}
-            className={`flex-1 py-1.5 text-xs rounded transition-colors ${
+            className={`flex-1 py-1.5 text-xs rounded transition-colors flex items-center justify-center ${
               mode === m
                 ? 'bg-siren-accent text-white'
                 : 'text-siren-text-muted hover:text-siren-text'
             }`}
           >
-            {m === 'webcam' ? '📷' : m === 'screen' ? '🖥️' : m === 'both' ? '📷🖥️' : '🎤'}
+            {m === 'webcam' ? <VideocamIcon sx={{ fontSize: 16 }} /> :
+             m === 'screen' ? <ScreenShareIcon sx={{ fontSize: 16 }} /> :
+             m === 'both' ? <PictureInPictureAltIcon sx={{ fontSize: 16 }} /> :
+             <MicIcon sx={{ fontSize: 16 }} />}
           </button>
         ))}
       </div>
@@ -357,8 +364,11 @@ export const RecordPanel: React.FC = () => {
         {!isPreviewing && (
           <div className="absolute inset-0 flex items-center justify-center text-siren-text-muted">
             <div className="text-center">
-              <div className="text-4xl mb-2">
-                {mode === 'webcam' ? '📷' : mode === 'screen' ? '🖥️' : mode === 'both' ? '📷🖥️' : '🎤'}
+              <div className="mb-2">
+                {mode === 'webcam' ? <VideocamIcon sx={{ fontSize: 48 }} /> :
+                 mode === 'screen' ? <ScreenShareIcon sx={{ fontSize: 48 }} /> :
+                 mode === 'both' ? <PictureInPictureAltIcon sx={{ fontSize: 48 }} /> :
+                 <MicIcon sx={{ fontSize: 48 }} />}
               </div>
               <p className="text-xs">Click preview to start</p>
             </div>
@@ -418,10 +428,10 @@ export const RecordPanel: React.FC = () => {
 
       {/* Quick tips */}
       <div className="text-xs text-siren-text-muted space-y-1">
-        <p>• 📷 Webcam: Front-facing camera</p>
-        <p>• 🖥️ Screen: Record your display</p>
-        <p>• 📷🖥️ Both: Picture-in-picture</p>
-        <p>• 🎤 Audio: Microphone only (voiceover)</p>
+        <p className="flex items-center gap-1"><VideocamIcon sx={{ fontSize: 12 }} /> Webcam: Front-facing camera</p>
+        <p className="flex items-center gap-1"><ScreenShareIcon sx={{ fontSize: 12 }} /> Screen: Record your display</p>
+        <p className="flex items-center gap-1"><PictureInPictureAltIcon sx={{ fontSize: 12 }} /> Both: Picture-in-picture</p>
+        <p className="flex items-center gap-1"><MicIcon sx={{ fontSize: 12 }} /> Audio: Microphone only (voiceover)</p>
       </div>
     </div>
   );

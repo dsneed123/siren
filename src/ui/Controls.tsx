@@ -1,5 +1,17 @@
 import React, { useCallback } from 'react';
 import { useSirenStore } from '@/core/store';
+import UndoIcon from '@mui/icons-material/Undo';
+import RedoIcon from '@mui/icons-material/Redo';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
+import DeleteIcon from '@mui/icons-material/Delete';
+import LinkIcon from '@mui/icons-material/Link';
+import LinkOffIcon from '@mui/icons-material/LinkOff';
+import SkipPreviousIcon from '@mui/icons-material/SkipPrevious';
+import FastRewindIcon from '@mui/icons-material/FastRewind';
+import PlayArrowIcon from '@mui/icons-material/PlayArrow';
+import PauseIcon from '@mui/icons-material/Pause';
+import FastForwardIcon from '@mui/icons-material/FastForward';
+import SkipNextIcon from '@mui/icons-material/SkipNext';
 
 export const Controls: React.FC = () => {
   const {
@@ -85,7 +97,7 @@ export const Controls: React.FC = () => {
           disabled={historyIndex <= 0}
           title="Undo (Ctrl+Z)"
         >
-          ↩
+          <UndoIcon sx={{ fontSize: 18 }} />
         </button>
         <button
           className="p-2 rounded hover:bg-siren-border transition-colors text-siren-text disabled:opacity-50"
@@ -93,7 +105,7 @@ export const Controls: React.FC = () => {
           disabled={historyIndex >= history.length - 1}
           title="Redo (Ctrl+Shift+Z)"
         >
-          ↪
+          <RedoIcon sx={{ fontSize: 18 }} />
         </button>
 
         <div className="w-px h-6 bg-siren-border mx-2" />
@@ -104,7 +116,7 @@ export const Controls: React.FC = () => {
           disabled={editor.selectedClipIds.length === 0}
           title="Split clip (Ctrl+S)"
         >
-          ✂
+          <ContentCutIcon sx={{ fontSize: 18 }} />
         </button>
         <button
           className="p-2 rounded hover:bg-siren-border transition-colors text-siren-text disabled:opacity-50"
@@ -112,7 +124,7 @@ export const Controls: React.FC = () => {
           disabled={editor.selectedClipIds.length === 0}
           title="Delete selected (Delete)"
         >
-          🗑
+          <DeleteIcon sx={{ fontSize: 18 }} />
         </button>
 
         <div className="w-px h-6 bg-siren-border mx-2" />
@@ -131,7 +143,7 @@ export const Controls: React.FC = () => {
             onClick={handleUnlinkSelected}
             title="Unlink selected clips"
           >
-            🔗 Grouped
+            <LinkOffIcon sx={{ fontSize: 14 }} /> Grouped
           </button>
         ) : (
           <button
@@ -144,7 +156,7 @@ export const Controls: React.FC = () => {
             disabled={editor.selectedClipIds.length < 2}
             title={editor.selectedClipIds.length < 2 ? "Select 2+ clips with Ctrl+Click or Shift+Click" : "Group selected clips together"}
           >
-            🔗 Group
+            <LinkIcon sx={{ fontSize: 14 }} /> Group
           </button>
         )}
       </div>
@@ -156,37 +168,37 @@ export const Controls: React.FC = () => {
           onClick={handleGoToStart}
           title="Go to start (Home)"
         >
-          ⏮
+          <SkipPreviousIcon sx={{ fontSize: 20 }} />
         </button>
         <button
           className="p-2 rounded hover:bg-siren-border transition-colors text-siren-text"
           onClick={handleSkipBack}
           title="Skip back (←)"
         >
-          ⏪
+          <FastRewindIcon sx={{ fontSize: 20 }} />
         </button>
         <button
           className={`p-3 rounded-full ${
             editor.isPlaying ? 'bg-red-600' : 'bg-siren-accent'
-          } text-white hover:opacity-90 transition-opacity text-lg`}
+          } text-white hover:opacity-90 transition-opacity`}
           onClick={handlePlayPause}
           title="Play/Pause (Space)"
         >
-          {editor.isPlaying ? '⏸' : '▶'}
+          {editor.isPlaying ? <PauseIcon sx={{ fontSize: 24 }} /> : <PlayArrowIcon sx={{ fontSize: 24 }} />}
         </button>
         <button
           className="p-2 rounded hover:bg-siren-border transition-colors text-siren-text"
           onClick={handleSkipForward}
           title="Skip forward (→)"
         >
-          ⏩
+          <FastForwardIcon sx={{ fontSize: 20 }} />
         </button>
         <button
           className="p-2 rounded hover:bg-siren-border transition-colors text-siren-text"
           onClick={handleGoToEnd}
           title="Go to end (End)"
         >
-          ⏭
+          <SkipNextIcon sx={{ fontSize: 20 }} />
         </button>
       </div>
 

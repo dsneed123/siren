@@ -312,6 +312,15 @@ export interface ShapeStyle {
   // Star/polygon specific
   points?: number;
   innerRadius?: number;
+  // Text inside shape
+  text?: {
+    content: string;
+    fontFamily: string;
+    fontSize: number;
+    fontWeight: number;
+    color: string;
+    align: 'left' | 'center' | 'right';
+  };
 }
 
 export interface ShapeClip extends ClipBase {

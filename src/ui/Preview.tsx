@@ -5,6 +5,7 @@ import { TextClip, VideoClip, ImageClip, ShapeClip, Clip } from '@/core/types';
 import { getAnimatedTransform } from '@/core/keyframes';
 import { ShapeOverlay } from './ShapeOverlay';
 import { ImageOverlay } from './ImageOverlay';
+import MovieIcon from '@mui/icons-material/Movie';
 
 export const Preview: React.FC = () => {
   const { project, editor, selectClips } = useSirenStore();
@@ -60,8 +61,10 @@ export const Preview: React.FC = () => {
     };
   }, [aspectRatio]);
 
-  // Animation loop
+  // Animation loop - only updates when playing or time changes
   useEffect(() => {
+    let lastTick = 0;
+
     const animate = () => {
       const state = useSirenStore.getState();
 
@@ -72,18 +75,30 @@ export const Preview: React.FC = () => {
 
         const newTime = state.editor.currentTime + deltaTime;
 
-        if (newTime >= state.project.duration && state.project.duration > 0) {
+        // Calculate actual duration from clips
+        const actualDuration = state.project.clips.length > 0
+          ? Math.max(...state.project.clips.map(c => c.timeRange.end))
+          : 0;
+
+        if (newTime >= actualDuration && actualDuration > 0) {
           state.setCurrentTime(0);
           state.setPlaying(false);
         } else {
           state.setCurrentTime(newTime);
         }
+
+        // Only update tick when playing (for re-render)
+        setTick(t => t + 1);
       } else {
         lastTimeRef.current = performance.now();
+        // Update tick occasionally when paused to catch time changes (scrubbing)
+        const now = performance.now();
+        if (now - lastTick > 50) { // 20fps when paused
+          lastTick = now;
+          setTick(t => t + 1);
+        }
       }
 
-      // Force re-render every frame
-      setTick(t => t + 1);
       animationRef.current = requestAnimationFrame(animate);
     };
 
@@ -115,8 +130,10 @@ export const Preview: React.FC = () => {
 
         if (isActive) {
           // Convert ms to seconds for video.currentTime, apply speed
+          // Account for sourceTimeRange (where in the source video to start)
           const clipTimeMs = time - clip.timeRange.start;
-          const clipTimeSec = (clipTimeMs / 1000) * clip.speed;
+          const sourceStartSec = (clip.sourceTimeRange?.start || 0) / 1000;
+          const clipTimeSec = sourceStartSec + (clipTimeMs / 1000) * clip.speed;
 
           // Only seek if significantly out of sync (more than 100ms = 0.1s)
           const timeDiff = Math.abs(video.currentTime - clipTimeSec);
@@ -286,7 +303,7 @@ export const Preview: React.FC = () => {
         {!hasActiveClips && (
           <div className="absolute inset-0 flex items-center justify-center text-siren-text-muted">
             <div className="text-center">
-              <div className="text-4xl mb-2">🎬</div>
+              <div className="mb-2"><MovieIcon sx={{ fontSize: 48 }} /></div>
               <p className="text-sm">Import media and add to timeline</p>
               <p className="text-xs mt-2 text-siren-text-muted">
                 Move playhead to where clip starts

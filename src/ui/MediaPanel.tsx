@@ -2,6 +2,11 @@ import React, { useCallback, useRef } from 'react';
 import { useSirenStore } from '@/core/store';
 import { videoEngine } from '@/core/engine';
 import { MediaAsset, VideoClip, AudioClip, ImageClip, TextClip, TextStyle } from '@/core/types';
+import MovieIcon from '@mui/icons-material/Movie';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import ImageIcon from '@mui/icons-material/Image';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
 
 const DEFAULT_TEXT_STYLE: TextStyle = {
   fontFamily: 'Arial',
@@ -132,13 +137,13 @@ export const MediaPanel: React.FC = () => {
   const getAssetIcon = (type: MediaAsset['type']) => {
     switch (type) {
       case 'video':
-        return '🎬';
+        return <MovieIcon sx={{ fontSize: 32 }} />;
       case 'audio':
-        return '🎵';
+        return <MusicNoteIcon sx={{ fontSize: 32 }} />;
       case 'image':
-        return '🖼';
+        return <ImageIcon sx={{ fontSize: 32 }} />;
       default:
-        return '📄';
+        return <InsertDriveFileIcon sx={{ fontSize: 32 }} />;
     }
   };
 
@@ -174,7 +179,7 @@ export const MediaPanel: React.FC = () => {
       <div className="flex-1 overflow-y-auto p-3">
         {project.assets.length === 0 ? (
           <div className="text-center text-siren-text-muted py-8">
-            <div className="text-3xl mb-2">📁</div>
+            <div className="mb-2"><FolderOpenIcon sx={{ fontSize: 40 }} /></div>
             <p className="text-sm">No media imported yet</p>
             <p className="text-xs mt-1">Import videos, audio, or images</p>
           </div>
@@ -195,7 +200,7 @@ export const MediaPanel: React.FC = () => {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-2xl">{getAssetIcon(asset.type)}</span>
+                    <span className="text-siren-text-muted">{getAssetIcon(asset.type)}</span>
                   )}
                 </div>
 

@@ -2,6 +2,14 @@ import React from 'react';
 import { Track, Clip } from '@/core/types';
 import { useSirenStore } from '@/core/store';
 import { TimelineClip } from './TimelineClip';
+import MovieIcon from '@mui/icons-material/Movie';
+import MusicNoteIcon from '@mui/icons-material/MusicNote';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
+import VolumeOffIcon from '@mui/icons-material/VolumeOff';
+import VolumeUpIcon from '@mui/icons-material/VolumeUp';
+import LockIcon from '@mui/icons-material/Lock';
+import LockOpenIcon from '@mui/icons-material/LockOpen';
 
 interface TimelineTrackProps {
   track: Track;
@@ -22,15 +30,15 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
   const getTrackIcon = () => {
     switch (track.type) {
       case 'video':
-        return '🎬';
+        return <MovieIcon sx={{ fontSize: 18 }} />;
       case 'audio':
-        return '🎵';
+        return <MusicNoteIcon sx={{ fontSize: 18 }} />;
       case 'text':
-        return 'T';
+        return <span className="text-sm font-bold">T</span>;
       case 'overlay':
-        return '◻';
+        return <span className="text-sm">◻</span>;
       default:
-        return '◯';
+        return <span className="text-sm">◯</span>;
     }
   };
 
@@ -52,7 +60,7 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
         {/* Track controls */}
         <div className="flex gap-1">
           <button
-            className={`w-6 h-6 rounded text-xs ${
+            className={`w-6 h-6 rounded flex items-center justify-center ${
               track.visible ? 'bg-siren-accent text-white' : 'bg-siren-border text-siren-text-muted'
             }`}
             onClick={(e) => {
@@ -61,10 +69,10 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
             }}
             title={track.visible ? 'Hide track' : 'Show track'}
           >
-            👁
+            {track.visible ? <VisibilityIcon sx={{ fontSize: 14 }} /> : <VisibilityOffIcon sx={{ fontSize: 14 }} />}
           </button>
           <button
-            className={`w-6 h-6 rounded text-xs ${
+            className={`w-6 h-6 rounded flex items-center justify-center ${
               track.muted ? 'bg-red-600 text-white' : 'bg-siren-border text-siren-text-muted'
             }`}
             onClick={(e) => {
@@ -73,10 +81,10 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
             }}
             title={track.muted ? 'Unmute track' : 'Mute track'}
           >
-            🔇
+            {track.muted ? <VolumeOffIcon sx={{ fontSize: 14 }} /> : <VolumeUpIcon sx={{ fontSize: 14 }} />}
           </button>
           <button
-            className={`w-6 h-6 rounded text-xs ${
+            className={`w-6 h-6 rounded flex items-center justify-center ${
               track.locked ? 'bg-amber-600 text-white' : 'bg-siren-border text-siren-text-muted'
             }`}
             onClick={(e) => {
@@ -85,7 +93,7 @@ export const TimelineTrack: React.FC<TimelineTrackProps> = ({
             }}
             title={track.locked ? 'Unlock track' : 'Lock track'}
           >
-            🔒
+            {track.locked ? <LockIcon sx={{ fontSize: 14 }} /> : <LockOpenIcon sx={{ fontSize: 14 }} />}
           </button>
         </div>
       </div>
