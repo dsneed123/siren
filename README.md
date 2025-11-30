@@ -1,59 +1,119 @@
-# Siren - Video Editor for TikTok
+# 🎬 Siren - TikTok Video Editor
 
-A fast, modular video editor optimized for TikTok content creation.
+A modern, browser-based video editor built for creating TikTok-style vertical videos. No uploads, no servers - everything runs in your browser.
 
-## Features
+## ✨ Features
 
-- **Timeline editing** - Multi-track timeline with video, audio, and text layers
-- **Drag & resize** - Draggable and resizable clips on the timeline
-- **Text overlays** - Fully customizable text with fonts, colors, shadows, strokes
-- **Effects system** - Modular effects including:
-  - Transitions: Fade, swipe (all directions), zoom, spin, blur, glitch
-  - Filters: Brightness, contrast, saturation, grayscale, sepia, vignette
-  - Animations: Fade in/out, slide, scale, bounce, shake
-- **TikTok optimized** - 1080x1920 (9:16) preset with safe zone guides
-- **Export** - Multiple quality presets and formats (MP4, WebM, GIF)
+### 📹 Media Support
+- **Video** - Import and edit video clips with full playback controls
+- **Audio** - Background music, voiceovers, and sound effects
+- **Images** - Draggable stickers and overlays
+- **Text** - Rich text with fonts, colors, shadows, and animations
 
-## Quick Start
+### 🎨 Effects Library
+| Transitions | Filters | Animations |
+|-------------|---------|------------|
+| Fade | Brightness | Fade In/Out |
+| Swipe (↑↓←→) | Contrast | Slide In |
+| Zoom In/Out | Saturation | Scale Up |
+| Spin | Grayscale | Bounce |
+| Blur | Sepia | Shake |
+| Glitch | Vignette | |
+
+### ✨ Keyframe Animation
+- Animate **position**, **scale**, **rotation**, and **opacity**
+- Visual keyframe indicators on clips
+- Add/remove individual keyframes
+- Smooth interpolation
+
+### 🔗 Clip Grouping
+- Multi-select with `Ctrl+Click` or `Shift+Click`
+- Group clips to move them together
+- Visual link indicators
+
+### 📐 Resizable Timeline
+- Drag the handle to resize
+- Snapping to playhead & clip edges
+- Multi-track editing
+- Drag clips between tracks
+
+### 🎙️ Recording
+| Mode | Description |
+|------|-------------|
+| 📷 Webcam | Front-facing camera |
+| 🖥️ Screen | Display capture |
+| 📷🖥️ Both | Picture-in-picture |
+| 🎤 Audio | Mic with live waveform |
+
+### 🖼️ Shapes & Emojis
+- Rectangles, circles, stars, hearts, arrows
+- Emoji picker with search
+- Custom sticker uploads
+
+## 🚀 Quick Start
 
 ```bash
 # Install dependencies
 npm install
 
-# Start development server
+# Start dev server
 npm run dev
 
 # Build for production
 npm run build
 ```
 
-## Project Structure
+Open **http://localhost:5173**
 
-```
-src/
-├── core/           # Core types, store, and video engine
-├── timeline/       # Timeline components (tracks, clips)
-├── effects/        # Modular effects system
-├── text/           # Text overlay system
-├── ui/             # UI components (preview, controls, panels)
-└── export/         # Export functionality
-```
-
-## Keyboard Shortcuts
+## ⌨️ Keyboard Shortcuts
 
 | Key | Action |
 |-----|--------|
-| Space | Play/Pause |
-| ← / → | Skip back/forward 1 second |
-| Home / End | Go to start/end |
-| Delete | Delete selected clip |
-| Ctrl+S | Split selected clip |
-| Ctrl+Z | Undo |
-| Ctrl+Shift+Z | Redo |
+| `Space` | Play/Pause |
+| `←` / `→` | Skip 1 second |
+| `Home` / `End` | Go to start/end |
+| `Delete` | Remove selected |
+| `Ctrl+Z` | Undo |
+| `Ctrl+Shift+Z` | Redo |
+| `?` | Show all shortcuts |
 
-## Adding Custom Effects
+## 📁 Project Structure
 
-The effects system is modular. To add a new effect:
+```
+src/
+├── core/           # Store, types, keyframes, engine
+├── ui/             # Preview, Controls, Panels
+├── timeline/       # Timeline, Tracks, Clips
+├── text/           # Text overlay & editor
+├── effects/        # Effect definitions
+└── export/         # Export modal
+```
+
+## 🎯 Usage
+
+### Adding Media
+1. **Media** tab → **Import Media** or drag & drop
+2. Click media to add at playhead position
+
+### Adding Text
+1. **Shapes** tab → **Add Text** or presets
+2. Edit in **Properties** panel
+
+### Applying Effects
+1. Select a clip on timeline
+2. **Effects** tab → browse & click to add
+
+### Keyframe Animation
+1. Select clip → **Properties** → **Keyframes**
+2. Move playhead → **+ Add Keyframe**
+3. Adjust values → repeat for animation
+
+### Grouping Clips
+1. `Ctrl+Click` multiple clips
+2. Click **🔗 Group** button
+3. Drag one to move all
+
+## 🛠️ Adding Custom Effects
 
 ```typescript
 import { effectRegistry } from '@/effects';
@@ -66,20 +126,32 @@ effectRegistry.register({
   icon: '✨',
   defaultDuration: 500,
   parameters: {
-    intensity: { name: 'Intensity', type: 'number', min: 0, max: 100, default: 50 }
+    intensity: {
+      name: 'Intensity',
+      type: 'number',
+      min: 0, max: 100,
+      default: 50
+    }
   },
   render: (ctx, progress, params, frame) => {
-    // Your effect rendering logic
+    // Effect logic here
   }
 });
 ```
 
-## Tech Stack
+## 🧰 Tech Stack
 
-- React 18
-- TypeScript
-- Zustand (state management)
-- FFmpeg.wasm (video processing)
-- Framer Motion (animations)
-- Tailwind CSS (styling)
-- Vite (build tool)
+- **React 18** + **TypeScript**
+- **Zustand** - State management
+- **FFmpeg.wasm** - Video processing
+- **Framer Motion** - Animations
+- **Tailwind CSS** - Styling
+- **Vite** - Build tool
+
+## 📄 License
+
+MIT - Use freely for personal or commercial projects.
+
+---
+
+Made with ❤️ for content creators

@@ -6,3 +6,4 @@ export { PropertiesPanel } from './PropertiesPanel';
 export { RecordPanel } from './RecordPanel';
 export { ShapesPanel } from './ShapesPanel';
 export { ShapeOverlay } from './ShapeOverlay';
+export { CaptionsPanel } from './CaptionsPanel';

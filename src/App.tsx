@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Preview, Controls, MediaPanel, EffectsPanel, PropertiesPanel, RecordPanel, ShapesPanel } from './ui';
+import { Preview, Controls, MediaPanel, EffectsPanel, PropertiesPanel, RecordPanel, ShapesPanel, CaptionsPanel } from './ui';
 import { Timeline } from './timeline';
 import { ExportModal } from './export';
 import { useSirenStore } from './core/store';
@@ -7,7 +7,7 @@ import { videoEngine } from './core/engine';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { getShortcutsByCategory, formatShortcut } from './core/shortcuts';
 
-type LeftPanelTab = 'media' | 'effects' | 'record' | 'shapes';
+type LeftPanelTab = 'media' | 'effects' | 'record' | 'shapes' | 'captions';
 
 const MIN_TIMELINE_HEIGHT = 150;
 const MAX_TIMELINE_HEIGHT = 600;
@@ -131,17 +131,25 @@ export const App: React.FC = () => {
         <aside className="w-64 flex-shrink-0 bg-siren-surface border-r border-siren-border flex flex-col">
           {/* Tabs */}
           <div className="flex border-b border-siren-border">
-            {(['media', 'shapes', 'effects', 'record'] as LeftPanelTab[]).map((tab) => (
+            {([
+              { id: 'media', icon: '📁', label: 'Media' },
+              { id: 'shapes', icon: '⬡', label: 'Shapes' },
+              { id: 'effects', icon: '✨', label: 'FX' },
+              { id: 'captions', icon: '🎤', label: 'Captions' },
+              { id: 'record', icon: '⏺', label: 'Record' },
+            ] as { id: LeftPanelTab; icon: string; label: string }[]).map((tab) => (
               <button
-                key={tab}
-                className={`flex-1 py-2 text-xs font-medium transition-colors ${
-                  leftPanelTab === tab
-                    ? 'text-siren-accent border-b-2 border-siren-accent'
-                    : 'text-siren-text-muted hover:text-siren-text'
+                key={tab.id}
+                className={`flex-1 py-2 text-[10px] font-medium transition-colors flex flex-col items-center gap-0.5 ${
+                  leftPanelTab === tab.id
+                    ? 'text-siren-accent border-b-2 border-siren-accent bg-siren-accent/10'
+                    : 'text-siren-text-muted hover:text-siren-text hover:bg-siren-bg/50'
                 }`}
-                onClick={() => setLeftPanelTab(tab)}
+                onClick={() => setLeftPanelTab(tab.id)}
+                title={tab.label}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                <span className="text-sm">{tab.icon}</span>
+                <span>{tab.label}</span>
               </button>
             ))}
           </div>
@@ -151,6 +159,7 @@ export const App: React.FC = () => {
             {leftPanelTab === 'media' && <MediaPanel />}
             {leftPanelTab === 'shapes' && <ShapesPanel />}
             {leftPanelTab === 'effects' && <EffectsPanel />}
+            {leftPanelTab === 'captions' && <CaptionsPanel />}
             {leftPanelTab === 'record' && <RecordPanel />}
           </div>
         </aside>
